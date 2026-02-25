@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+x<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -161,7 +161,16 @@
             <input type="text" id="productCategory" placeholder="Category" required>
           </div>
           <div class="form-group">
-            <input type="text" id="productImage" placeholder="Image URL">
+            <label style="display: block; margin-bottom: 8px; color: #555; font-weight: 500;">Product Image</label>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <input type="file" id="productImageFile" accept="image/*" style="flex: 1;">
+              <span style="color: #888; font-size: 0.9rem;">OR</span>
+              <input type="text" id="productImage" placeholder="Image URL" style="flex: 1;">
+            </div>
+            <div id="imagePreview" style="margin-top: 10px; display: none;">
+              <img id="previewImg" src="" alt="Preview" style="max-width: 150px; max-height: 150px; border-radius: 8px; border: 2px solid #667eea;">
+              <button type="button" onclick="clearImagePreview()" style="margin-left: 10px; padding: 5px 10px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">✕</button>
+            </div>
           </div>
           <div class="form-group">
             <input type="number" id="productStock" placeholder="Stock" required>
@@ -715,7 +724,7 @@
     }
   }
   
-  async function loadFiltersForProductForm() {
+async function loadFiltersForProductForm() {
     try {
       const res = await fetch(`${API_BASE}/filters`);
       const data = await res.json();
@@ -735,7 +744,7 @@
           <label style="display: block; margin-bottom: 8px; color: #333; font-weight: 600;">${escapeHtml(filter.name)}</label>
           <div style="display: flex; flex-wrap: wrap; gap: 10px;">
             ${values.map(v => `<label style="display: flex; align-items: center; gap: 5px; cursor: pointer; padding: 5px 10px; background: white; border: 1px solid #ddd; border-radius: 4px;">
-              <input type="radio" name="filter_${filter.id}" value="${v.id}" style="accent-color: #2d6cdf;">
+              <input type="radio" name="filter_${filter.key}" value="${v.value}" data-filter-key="${filter.key}" style="accent-color: #2d6cdf;">
               <span>${escapeHtml(v.value)}</span>
             </label>`).join('')}
           </div></div>`;
@@ -749,7 +758,9 @@
   function getFilterSelections() {
     const selections = {};
     document.querySelectorAll('#filterOptionsContainer input[type="radio"]:checked').forEach(radio => {
-      selections[radio.name.replace('filter_', '')] = parseInt(radio.value);
+      // Use filter key (e.g., "type", "size") as the key, and value name (e.g., "Jar", "Large") as the value
+      const filterKey = radio.getAttribute('data-filter-key') || radio.name.replace('filter_', '');
+      selections[filterKey] = radio.value;
     });
     return Object.keys(selections).length > 0 ? selections : null;
   }
@@ -1546,6 +1557,30 @@ function closeModal() {
     loadDashboard();
   } else {
     showLoginPage();
+  }
+
+  // Image preview functionality
+  document.getElementById('productImageFile').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('imagePreview');
+    const previewImg = document.getElementById('previewImg');
+    
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        previewImg.src = e.target.result;
+        preview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    } else {
+      preview.style.display = 'none';
+    }
+  });
+
+  function clearImagePreview() {
+    document.getElementById('productImageFile').value = '';
+    document.getElementById('imagePreview').style.display = 'none';
+    document.getElementById('previewImg').src = '';
   }
 </script>
 

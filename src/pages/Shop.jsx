@@ -315,11 +315,22 @@ export default function Shop() {
                       </button>
                     </div>
                   </div>
-                  <div className="product-details">
+<div className="product-details">
                     <h3 className="product-name">{product.name}</h3>
                     <div className="product-info-row">
-                      <span className="product-fragrance">{product.fragrance}</span>
-                      <span className="product-size">{product.size}</span>
+                      {/* Show all filter selections dynamically */}
+                      {product.filterSelections && Object.keys(product.filterSelections).length > 0 ? (
+                        Object.entries(product.filterSelections).map(([key, value], idx) => (
+                          <span key={idx} className="product-fragrance" style={{ textTransform: 'capitalize' }}>
+                            {value}
+                          </span>
+                        ))
+                      ) : (
+                        <>
+                          <span className="product-fragrance">{product.fragrance}</span>
+                          <span className="product-size">{product.size}</span>
+                        </>
+                      )}
                     </div>
                     <p className="product-short-desc">{product.description}</p>
                     <div className="product-footer">

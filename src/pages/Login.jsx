@@ -231,13 +231,13 @@ export default function Login() {
             {/* Global Error Message */}
             {error && (
               <div style={{ 
-                backgroundColor: '#fef3c7', 
-                color: '#d97706', 
+                backgroundColor: '#fce7f3', 
+                color: '#be185d', 
                 padding: '12px', 
-                borderRadius: '4px', 
+                borderRadius: '12px', 
                 marginBottom: '20px', 
                 fontSize: '13px',
-                border: '1px solid #fcd34d'
+                border: '2px solid #f9a8d4'
               }}>
                 {error}
               </div>
@@ -285,7 +285,7 @@ export default function Login() {
                 style={{ 
                   background: 'none', 
                   border: 'none', 
-                  color: '#8b7d6b', 
+                  color: '#7a5980', 
                   fontSize: '13px', 
                   cursor: 'pointer', 
                   textDecoration: 'underline',

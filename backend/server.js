@@ -4,6 +4,8 @@ import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import multer from 'multer';
+import fs from 'fs';
 import productRoutes from './src/routes/productRoutes.js';
 import orderRoutes from './src/routes/orderRoutes.js';
 import adminRoutes from './src/routes/adminRoutes.js';
@@ -14,6 +16,7 @@ import filterRoutes from './src/routes/filterRoutes.js';
 import settingsRoutes from './src/routes/settingsRoutes.js';
 import userRoutes from './src/routes/userRoutes.js';
 import wishlistRoutes from './src/routes/wishlistRoutes.js';
+import { authenticateToken } from './src/middleware/auth.js';
 
 dotenv.config();
 
@@ -30,6 +33,37 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 // serve uploaded images
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
+// Product image upload setup
+const productUploadDir = path.join(__dirname, 'public/uploads/products');
+if (!fs.existsSync(productUploadDir)) {
+  fs.mkdirSync(productUploadDir, { recursive: true });
+}
+
+const productStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, productUploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const productUpload = multer({ storage: productStorage });
+
+// Product image upload endpoint
+app.post('/api/upload/product', authenticateToken, productUpload.single('image'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    const imageUrl = `/uploads/products/${req.file.filename}`;
+    res.json({ imageUrl });
+  } catch (error) {
+    res.status(500).json({ error: 'Upload failed' });
+  }
+});
 
 // API Routes
 app.use('/api/products', productRoutes);

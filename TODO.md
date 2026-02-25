@@ -1,23 +1,42 @@
-# User Profile Implementation TODO
+# Website Design Improvement Plan - Progress Tracker
 
-## Backend
-- [x] 1. Create database migration script (add columns and wishlist table)
-- [x] 2. Update User model with updateProfile() and getOrdersByUser()
-- [x] 3. Update Order model to include user_id
-- [x] 4. Create Wishlist model
-- [x] 5. Create userController.js
-- [x] 6. Create wishlistController.js
-- [x] 7. Create userRoutes.js
-- [x] 8. Create wishlistRoutes.js
-- [x] 9. Update server.js to include new routes
+## Task: Improve website design with proper responsive layout for desktop and mobile views
 
-## Frontend
-- [x] 10. Update api.js with user profile and wishlist endpoints
-- [x] 11. Create Profile.jsx page with 3 tabs
-- [x] 12. Update App.jsx to add profile route (already exists)
-- [x] 13. Add wishlist button to ProductDetail.jsx
+---
 
-## Next Steps
-- Run the database migration: cd backend && node scripts/add_user_profile_fields.js
-- Start the backend: cd backend && npm run dev
-- Start the frontend: npm run dev
+## Completed Tasks ✅
+
+### ✅ Fixed Global Styles (`src/index.css`)
+- Removed dark mode defaults that conflicted with light theme
+- Removed centered content styling on #root
+- Added CSS custom properties (--primary-color, --secondary-color)
+- Kept only essential global resets
+
+**Impact:** Clean foundation without conflicting default styles from Vite template.
+
+---
+
+### ✅ Enhanced Header Component (`src/components/Header.css`) 
+- Improved hamburger menu animation smoothness (X animation)
+- Added backdrop blur effect when menu opens on mobile  
+- Better touch targets for navigation links (44px minimum per WCAG)
+- Slide-in sidebar menu instead of dropdown overlay
+  
+**Impact:** Much better user experience especially on phones - easier tap targets,
+smoother animations, visual feedback via backdrop blur.
+
+---
+
+## Remaining Tasks 🔄
+
+| File | Status |
+|------|--------|
+| src/index.css | Done |
+| src/components/Header.css | Done |
+| src/components/Hero.css | Next |
+| src/components/Footer.css | Pending |
+| src/components/ProductCard.css | Pending |
+| src/pages/Shop.css | Pending |
+
+---
+Last Updated: 2026-02-24
