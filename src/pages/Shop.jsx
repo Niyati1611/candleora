@@ -278,7 +278,11 @@ export default function Shop() {
               {filteredProducts.map(product => (
                 <div key={product.id} className="product-item">
                   <div className="product-image-container">
-                    <div className="product-image">{product.image}</div>
+                    {product.image && (product.image.startsWith('http') || product.image.startsWith('/')) ? (
+                      <img src={product.image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <div className="product-image">{product.image}</div>
+                    )}
                     {/* Wishlist Button */}
                     <button
                       className={`wishlist-btn ${wishlistProducts.includes(product.id) ? 'active' : ''}`}
