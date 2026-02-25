@@ -59,6 +59,7 @@ export default function Shop() {
       try {
         const wishlist = await api.getWishlist()
         setWishlistProducts(wishlist.map(item => item.product_id))
+
       } catch (err) {
         setWishlistProducts([])
       }
@@ -108,7 +109,7 @@ export default function Shop() {
       id: p.id,
       name: p.name,
       price: parseFloat(p.price) || 0,
-      image: '🕯️',
+      image: p.image_url || '🕯️',
       fragrance: p.category || 'General',
       description: p.description || '',
       size: filterSelections?.size || 'medium',

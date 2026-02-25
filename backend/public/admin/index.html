@@ -1063,10 +1063,36 @@ async function loadFiltersForProductForm() {
     }
   }
 
-  // Add product
+  // Add product - handles file upload
   document.getElementById('productForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
+      const fileInput = document.getElementById('productImageFile');
+      const urlInput = document.getElementById('productImage');
+      let imageUrl = urlInput.value;
+      
+      // If file is selected, upload it first
+      if (fileInput.files.length > 0) {
+        const formData = new FormData();
+        formData.append('image', fileInput.files[0]);
+        
+        const uploadRes = await fetch(`${API_BASE}/upload/product`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        });
+        
+        if (!uploadRes.ok) {
+          throw new Error('Failed to upload image');
+        }
+        
+        const uploadData = await uploadRes.json();
+        imageUrl = uploadData.imageUrl;
+      }
+      
+      // Now submit product data
       const res = await fetch(`${API_BASE}/products`, {
         method: 'POST',
         headers: {
@@ -1078,7 +1104,7 @@ async function loadFiltersForProductForm() {
           description: document.getElementById('productDescription').value,
           price: parseFloat(document.getElementById('productPrice').value),
           category: document.getElementById('productCategory').value,
-          image_url: document.getElementById('productImage').value,
+          image_url: imageUrl,
           stock: parseInt(document.getElementById('productStock').value),
           discount_price: document.getElementById('productDiscountPrice')?.value ? parseFloat(document.getElementById('productDiscountPrice').value) : null,
           is_new_arrival: document.getElementById('productNewArrival')?.checked || false,
@@ -1090,6 +1116,9 @@ async function loadFiltersForProductForm() {
       if (res.ok) {
         toggleAddProductForm();
         document.getElementById('productForm').reset();
+        // Clear image preview
+        document.getElementById('productImageFile').value = '';
+        document.getElementById('imagePreview').style.display = 'none';
         loadProducts();
         alert('Product added successfully');
       }
