@@ -1,0 +1,48 @@
+.collection-banner {
+  width: 100%;
+  background-color: #f5f1ed;
+  padding: 20px 0;
+  overflow: hidden;
+}
+
+.collection-marquee {
+  display: flex;
+  overflow: hidden;
+}
+
+.marquee-content {
+  display: flex;
+  gap: 60px;
+  padding: 10px 0;
+  animation: scroll 30s linear infinite;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  color: #8b3a3a;
+  white-space: nowrap;
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-content:hover {
+  animation-play-state: paused;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .collection-banner {
+    padding: 15px 0;
+  }
+
+  .marquee-content {
+    font-size: 12px;
+    gap: 40px;
+  }
+}

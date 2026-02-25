@@ -1,0 +1,388 @@
+.about {
+  width: 100%;
+  background-color: #faf8f6;
+  min-height: calc(100vh - 200px);
+}
+
+.about-header {
+  background: linear-gradient(135deg, #8b7d6b 0%, #a89968 100%);
+  color: white;
+  text-align: center;
+  padding: 80px 40px;
+}
+
+.about-header h1 {
+  font-size: 48px;
+  font-weight: 300;
+  letter-spacing: 2px;
+  margin: 0 0 20px 0;
+}
+
+.about-header p {
+  font-size: 18px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.5px;
+}
+
+.about-story {
+  max-width: 1200px;
+  margin: 60px auto;
+  padding: 0 40px;
+}
+
+.story-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+
+.story-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  background: linear-gradient(135deg, #f5e8e3 0%, #f0dcd7 100%);
+  border-radius: 8px;
+}
+
+.story-icon {
+  font-size: 200px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.story-content h2 {
+  font-size: 36px;
+  font-weight: 300;
+  letter-spacing: 1.5px;
+  color: #3a3a3a;
+  margin: 0 0 30px 0;
+}
+
+.story-content p {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #666;
+  margin: 0 0 20px 0;
+}
+
+.about-values {
+  max-width: 1200px;
+  margin: 80px auto;
+  padding: 0 40px;
+  text-align: center;
+}
+
+.about-values h2 {
+  font-size: 36px;
+  font-weight: 300;
+  letter-spacing: 1.5px;
+  color: #3a3a3a;
+  margin: 0 0 60px 0;
+}
+
+.values-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
+}
+
+.value-card {
+  background-color: white;
+  padding: 40px 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.value-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.value-icon {
+  font-size: 48px;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.value-card h3 {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #3a3a3a;
+  margin: 0 0 15px 0;
+  text-transform: uppercase;
+}
+
+.value-card p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #666;
+  margin: 0;
+}
+
+.about-team {
+  background-color: white;
+  padding: 80px 40px;
+  text-align: center;
+}
+
+.about-team h2 {
+  font-size: 36px;
+  font-weight: 300;
+  letter-spacing: 1.5px;
+  color: #3a3a3a;
+  margin: 0 0 60px 0;
+}
+
+.founder-card {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 60px;
+  max-width: 900px;
+  margin: 0 auto;
+  align-items: center;
+  text-align: left;
+}
+
+.founder-image {
+  font-size: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f5e8e3 0%, #f0dcd7 100%);
+  border-radius: 8px;
+  height: 300px;
+}
+
+.founder-info h3 {
+  font-size: 28px;
+  font-weight: 600;
+  color: #3a3a3a;
+  margin: 0 0 10px 0;
+}
+
+.founder-title {
+  font-size: 14px;
+  color: #8b7d6b;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin: 0 0 20px 0;
+}
+
+.founder-info p {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #666;
+  margin: 0;
+}
+
+.about-stats {
+  max-width: 1200px;
+  margin: 80px auto;
+  padding: 0 40px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 40px;
+  text-align: center;
+}
+
+.stat-item h3 {
+  font-size: 42px;
+  font-weight: 300;
+  color: #8b7d6b;
+  margin: 0 0 10px 0;
+  letter-spacing: 1px;
+}
+
+.stat-item p {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.about-cta {
+  background: linear-gradient(135deg, #8b7d6b 0%, #a89968 100%);
+  color: white;
+  text-align: center;
+  padding: 80px 40px;
+  margin-top: 60px;
+}
+
+.about-cta h2 {
+  font-size: 36px;
+  font-weight: 300;
+  letter-spacing: 1.5px;
+  margin: 0 0 20px 0;
+}
+
+.about-cta p {
+  font-size: 18px;
+  margin: 0 0 40px 0;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.cta-button {
+  padding: 14px 40px;
+  background-color: white;
+  color: #8b7d6b;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+}
+
+.cta-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .values-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .story-container {
+    gap: 40px;
+  }
+
+  .about-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .about-header {
+    padding: 60px 30px;
+  }
+
+  .about-header h1 {
+    font-size: 32px;
+  }
+
+  .about-story {
+    padding: 0 30px;
+  }
+
+  .story-container {
+    grid-template-columns: 1fr;
+  }
+
+  .story-image {
+    height: 300px;
+  }
+
+  .story-icon {
+    font-size: 140px;
+  }
+
+  .about-values {
+    padding: 0 30px;
+  }
+
+  .values-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .founder-card {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .founder-image {
+    height: 250px;
+    font-size: 140px;
+  }
+
+  .about-stats {
+    padding: 0 30px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+  }
+
+  .about-cta {
+    padding: 60px 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .about-header {
+    padding: 40px 20px;
+  }
+
+  .about-header h1 {
+    font-size: 24px;
+  }
+
+  .about-header p {
+    font-size: 14px;
+  }
+
+  .about-story {
+    padding: 0 20px;
+    margin: 40px auto;
+  }
+
+  .story-content h2 {
+    font-size: 24px;
+  }
+
+  .story-content p {
+    font-size: 14px;
+  }
+
+  .about-values {
+    padding: 0 20px;
+  }
+
+  .about-values h2 {
+    font-size: 24px;
+  }
+
+  .about-team {
+    padding: 40px 20px;
+  }
+
+  .founder-image {
+    font-size: 100px;
+    height: 200px;
+  }
+
+  .founder-info h3 {
+    font-size: 20px;
+  }
+
+  .about-stats {
+    padding: 0 20px;
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .about-cta {
+    padding: 40px 20px;
+  }
+
+  .about-cta h2 {
+    font-size: 24px;
+  }
+}
