@@ -5,32 +5,110 @@ import { api } from '../services/api'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 
+const SHOP_STATE_KEY = 'shop_page_state'
+
+const getSavedShopState = () => {
+  try {
+    const raw = localStorage.getItem(SHOP_STATE_KEY)
+    if (!raw) return {}
+    const parsed = JSON.parse(raw)
+    return parsed && typeof parsed === 'object' ? parsed : {}
+  } catch (e) {
+    return {}
+  }
+}
+
 export default function Shop() {
+  const savedState = getSavedShopState()
   const navigate = useNavigate()
   const { addToCart } = useCart()
   const { user } = useAuth()
-  const [searchTerm, setSearchTerm] = useState('')
-  const [priceRange, setPriceRange] = useState([0, 100])
-  const [openDropdown, setOpenDropdown] = useState(null)
+  const [searchTerm, setSearchTerm] = useState(savedState.searchTerm || '')
   const [productsData, setProductsData] = useState([])
-  const [filtersData, setFiltersData] = useState([])
-  const [selectedFilters, setSelectedFilters] = useState({})
   const [loading, setLoading] = useState(true)
   const [totalProductCount, setTotalProductCount] = useState([])
   const [wishlistProducts, setWishlistProducts] = useState([])
+  const [categoryFilter, setCategoryFilter] = useState('')
+  const [cartMessage, setCartMessage] = useState('')
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
+  
+  // Read category from URL query and fetch products when it changes
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const category = params.get('category');
+    if (category) {
+      setCategoryFilter(category);
+    } else {
+      setCategoryFilter('');
+    }
+  }, [window.location.search]);
 
-  // Fetch products from backend
+  // Fetch products when categoryFilter changes
+  useEffect(() => {
+    fetchProducts();
+  }, [categoryFilter]);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(
+    Number.isInteger(savedState.currentPage) && savedState.currentPage > 0 ? savedState.currentPage : 1
+  )
+  const itemsPerPage = 12
+
+  // Filter states
+  const [filters, setFilters] = useState([])
+  const [selectedFilters, setSelectedFilters] = useState(
+    savedState.selectedFilters && typeof savedState.selectedFilters === 'object' ? savedState.selectedFilters : {}
+  )
+  const [openFilters, setOpenFilters] = useState({})
+
+  // Fetch products and filters from backend
   useEffect(() => {
     fetchProducts()
     fetchFilters()
-    fetchWishlist()
   }, [])
+
+  useEffect(() => {
+    fetchWishlist()
+  }, [user])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        SHOP_STATE_KEY,
+        JSON.stringify({
+          searchTerm,
+          selectedFilters,
+          currentPage,
+        })
+      )
+    } catch (e) {
+      // ignore storage write errors
+    }
+  }, [searchTerm, selectedFilters, currentPage])
+
+  // Reset to page 1 when filters or search change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, selectedFilters])
+
+  useEffect(() => {
+    if (!isMobileFiltersOpen) return undefined
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [isMobileFiltersOpen])
 
   const fetchProducts = async () => {
     try {
       const products = await api.getProducts()
-      setProductsData(products)
-      setTotalProductCount(products.length)
+      let filtered = products;
+      if (categoryFilter) {
+        filtered = products.filter(p => p.category === categoryFilter || p.name === categoryFilter);
+      }
+      setProductsData(filtered)
+      setTotalProductCount(filtered.length)
       setLoading(false)
     } catch (error) {
       console.error('Error fetching products:', error)
@@ -40,71 +118,90 @@ export default function Shop() {
 
   const fetchFilters = async () => {
     try {
-      const res = await api.getFilters()
-      const filters = Array.isArray(res.filters) ? res.filters : []
-      setFiltersData(filters)
-      // Initialize selected filters for each filter key
-      const initialSelected = {}
-      filters.forEach(f => {
-        initialSelected[f.key] = 'all'
-      })
-      setSelectedFilters(initialSelected)
-    } catch (err) {
-      console.error('Error fetching filters:', err)
+      const filtersData = await api.getFilters()
+      if (filtersData && filtersData.filters) {
+        setFilters(filtersData.filters)
+      }
+    } catch (error) {
+      console.error('Error fetching filters:', error)
     }
   }
 
   const fetchWishlist = async () => {
-    if (user) {
-      try {
-        const wishlist = await api.getWishlist()
-        setWishlistProducts(wishlist.map(item => item.product_id))
-
-      } catch (err) {
-        setWishlistProducts([])
-      }
+    if (!user) {
+      setWishlistProducts([])
+      return
+    }
+    try {
+      const wishlist = await api.getWishlist()
+      setWishlistProducts(wishlist.map(item => item.product_id))
+    } catch (error) {
+      console.error('Error fetching wishlist:', error)
     }
   }
 
   const handleAddToWishlist = async (productId) => {
     if (!user) {
-      alert('Please login to add items to your wishlist')
       navigate('/login')
       return
     }
-    
     try {
       if (wishlistProducts.includes(productId)) {
         await api.removeFromWishlist(productId)
         setWishlistProducts(prev => prev.filter(id => id !== productId))
-        alert('Removed from wishlist!')
       } else {
         await api.addToWishlist(productId)
         setWishlistProducts(prev => [...prev, productId])
-        alert('Added to wishlist!')
       }
     } catch (error) {
       console.error('Wishlist error:', error)
-      alert('Failed to update wishlist')
     }
+  }
+
+  // Toggle filter dropdown
+  const toggleFilter = (filterId) => {
+    setOpenFilters(prev => ({
+      ...prev,
+      [filterId]: !prev[filterId]
+    }))
+  }
+
+  // Handle filter checkbox change
+  const handleFilterChange = (filterId, value) => {
+    setSelectedFilters(prev => {
+      const currentFilters = prev[filterId] || []
+      if (currentFilters.includes(value)) {
+        return {
+          ...prev,
+          [filterId]: currentFilters.filter(v => v !== value)
+        }
+      } else {
+        return {
+          ...prev,
+          [filterId]: [...currentFilters, value]
+        }
+      }
+    })
+  }
+
+  // Reset all filters
+  const resetFilters = () => {
+    setSelectedFilters({})
+    setSearchTerm('')
+    setCurrentPage(1)
   }
 
   // Transform backend products to match frontend format
   const transformedProducts = productsData.map(p => {
-    // Parse filter_selections JSON if it exists and is not null
-    let filterSelections = {};
-    try {
-      if (p.filter_selections && p.filter_selections !== null) {
-        const parsed = typeof p.filter_selections === 'string' 
-          ? JSON.parse(p.filter_selections) 
-          : p.filter_selections;
-        filterSelections = parsed || {};
+    let filterSelections = p.filter_selections
+    if (typeof p.filter_selections === 'string') {
+      try {
+        filterSelections = JSON.parse(p.filter_selections)
+      } catch (e) {
+        filterSelections = {}
       }
-    } catch (e) {
-      console.error('Error parsing filter_selections:', e);
-      filterSelections = {};
     }
-
+    
     return {
       id: p.id,
       name: p.name,
@@ -112,67 +209,130 @@ export default function Shop() {
       image: p.image_url || '🕯️',
       fragrance: p.category || 'General',
       description: p.description || '',
-      size: filterSelections?.size || 'medium',
-      type: filterSelections?.type || 'jar',
-      // Store parsed filter_selections for filtering
-      filterSelections,
-      // Store all filter values from product data
-      ...p
-    };
+      filterSelections: filterSelections || {}
+    }
   })
 
-  // Get filter options from backend filters
-  const getFilterOptions = (filterKey) => {
-    const f = filtersData.find(x => x.key === filterKey)
-    if (f && Array.isArray(f.values) && f.values.length > 0) {
-      return ['all', ...f.values.map(v => v.value)]
-    }
-    return ['all']
-  }
-
-  // Handle filter selection change
-  const handleFilterChange = (filterKey, value) => {
-    setSelectedFilters(prev => ({
-      ...prev,
-      [filterKey]: value
-    }))
-  }
-
-  // Get all enabled filter keys from backend
-  const enabledFilters = filtersData.filter(f => f.enabled)
-
-  // Filter and search products
+  // Filter and search products with filter selections
   const filteredProducts = useMemo(() => {
     return transformedProducts.filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (product.fragrance && product.fragrance.toLowerCase().includes(searchTerm.toLowerCase()))
       
-      // Check all enabled filters
-      const matchesFilters = enabledFilters.every(filter => {
-        const selectedValue = selectedFilters[filter.key]
-        if (selectedValue === 'all') return true
-        
-        // Get the product value for this filter key from filterSelections
-        const productValue = product.filterSelections?.[filter.key] || ''
-        return productValue === selectedValue
-      })
-
-      const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1]
-
-      return matchesSearch && matchesFilters && matchesPrice
+      let matchesFilters = true
+      if (Object.keys(selectedFilters).length > 0) {
+        for (const [filterId, selectedValues] of Object.entries(selectedFilters)) {
+          if (selectedValues.length > 0) {
+            const filter = filters.find(f => f.id === parseInt(filterId))
+            if (filter) {
+              const productFilterValue = product.filterSelections[filter.key]
+              const hasMatch = selectedValues.some(val => 
+                productFilterValue && productFilterValue.toLowerCase() === val.toLowerCase()
+              )
+              if (!hasMatch) {
+                matchesFilters = false
+                break
+              }
+            }
+          }
+        }
+      }
+      
+      return matchesSearch && matchesFilters
     })
-  }, [searchTerm, selectedFilters, priceRange, transformedProducts, enabledFilters])
+  }, [searchTerm, transformedProducts, selectedFilters, filters])
 
-  // Reset filters
-  const resetFilters = () => {
-    setSearchTerm('')
-    setPriceRange([0, 100])
-    setOpenDropdown(null)
-    const reset = {}
-    enabledFilters.forEach(f => {
-      reset[f.key] = 'all'
-    })
-    setSelectedFilters(reset)
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentProducts = filteredProducts.slice(startIndex, endIndex)
+
+  // Pagination handlers
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
+  const renderPagination = () => {
+    if (totalPages <= 1) return null
+
+    const pages = []
+    const maxVisiblePages = 5
+    
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2))
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1)
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1)
+    }
+
+    // Previous button
+    pages.push(
+      <button 
+        key="prev" 
+        className="pagination-btn"
+        onClick={() => goToPage(currentPage - 1)}
+        disabled={currentPage === 1}
+      >
+        {'< Prev'}
+      </button>
+    )
+
+    // First page
+    if (startPage > 1) {
+      pages.push(
+        <button key={1} className="pagination-btn" onClick={() => goToPage(1)}>1</button>
+      )
+      if (startPage > 2) {
+        pages.push(<span key="ellipsis1" className="pagination-ellipsis">...</span>)
+      }
+    }
+
+    // Page numbers
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(
+        <button 
+          key={i} 
+          className={`pagination-btn ${currentPage === i ? 'active' : ''}`}
+          onClick={() => goToPage(i)}
+        >
+          {i}
+        </button>
+      )
+    }
+
+    // Last page
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        pages.push(<span key="ellipsis2" className="pagination-ellipsis">...</span>)
+      }
+      pages.push(
+        <button key={totalPages} className="pagination-btn" onClick={() => goToPage(totalPages)}>
+          {totalPages}
+        </button>
+      )
+    }
+
+    // Next button
+    pages.push(
+      <button 
+        key="next" 
+        className="pagination-btn"
+        onClick={() => goToPage(currentPage + 1)}
+        disabled={currentPage === totalPages}
+      >
+        {'Next >'}
+      </button>
+    )
+
+    return (
+      <div className="pagination">
+        {pages}
+      </div>
+    )
   }
 
   return (
@@ -180,6 +340,11 @@ export default function Shop() {
       {/* Search Bar */}
       <div className="shop-header">
         <h1>Shop Our Candles</h1>
+        {cartMessage && (
+          <div className="cart-success-message">
+            {cartMessage}
+          </div>
+        )}
         <div className="search-bar">
           <input
             type="text"
@@ -190,74 +355,71 @@ export default function Shop() {
           />
           <span className="search-icon">🔍</span>
         </div>
+        <button
+          type="button"
+          className="mobile-filter-btn"
+          onClick={() => setIsMobileFiltersOpen(true)}
+        >
+          Filter Products
+        </button>
       </div>
 
       <div className="shop-container">
-        {/* Filters Sidebar with Dropdowns */}
-        <aside className="filters-sidebar">
-          <h2>Filters</h2>
-
-          {/* Dynamic Filters from Backend */}
-          {enabledFilters.map(filter => (
-            <div className="filter-group" key={filter.id}>
-              <button
-                className="filter-toggle"
-                onClick={() => setOpenDropdown(openDropdown === filter.key ? null : filter.key)}
-              >
-                <span>{filter.name}</span>
-                <span className={`toggle-icon ${openDropdown === filter.key ? 'open' : ''}`}>▼</span>
-              </button>
-              {openDropdown === filter.key && (
-                <div className="filter-options">
-                  {getFilterOptions(filter.key).map(option => (
-                    <label key={option} className="filter-option">
-                      <input
-                        type="radio"
-                        name={filter.key}
-                        value={option}
-                        checked={selectedFilters[filter.key] === option}
-                        onChange={(e) => handleFilterChange(filter.key, e.target.value)}
-                      />
-                      <span className="filter-label">{option === 'all' ? 'All' : option.charAt(0).toUpperCase() + option.slice(1)}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-
-          {/* Price Filter (always available) */}
-          <div className="filter-group">
+        {isMobileFiltersOpen && (
+          <div
+            className="filters-overlay"
+            onClick={() => setIsMobileFiltersOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+        {/* Filters Sidebar */}
+        <aside className={`filters-sidebar ${isMobileFiltersOpen ? 'active' : ''}`}>
+          <div className="filters-header">
+            <h2>Filters</h2>
             <button
-              className="filter-toggle"
-              onClick={() => setOpenDropdown(openDropdown === 'price' ? null : 'price')}
+              type="button"
+              className="filters-close-btn"
+              onClick={() => setIsMobileFiltersOpen(false)}
+              aria-label="Close filters"
             >
-              <span>Price Range</span>
-              <span className={`toggle-icon ${openDropdown === 'price' ? 'open' : ''}`}>▼</span>
+              x
             </button>
-            {openDropdown === 'price' && (
-              <div className="price-range">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={priceRange[1]}
-                  onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-                  className="price-slider"
-                />
-                <div className="price-display">
-                  ${priceRange[0]} - ${priceRange[1]}
-                </div>
-              </div>
-            )}
           </div>
-
-          {/* Reset Filters */}
-          <button
-            className="reset-filters"
-            onClick={resetFilters}
-          >
-            Reset Filters
+          
+          {filters && filters.length > 0 ? (
+            filters.map(filter => (
+              <div key={filter.id} className="filter-group">
+                <button
+                  className="filter-toggle"
+                  onClick={() => toggleFilter(filter.id)}
+                >
+                  {filter.name}
+                  <span className={`toggle-icon ${openFilters[filter.id] ? 'open' : ''}`}>▼</span>
+                </button>
+                {openFilters[filter.id] && filter.values && filter.values.length > 0 && (
+                  <div className="filter-options">
+                    {filter.values.map(value => (
+                      <label key={value.id} className="filter-option">
+                        <input
+                          type="checkbox"
+                          checked={selectedFilters[filter.id]?.includes(value.value) || false}
+                          onChange={() => handleFilterChange(filter.id, value.value)}
+                        />
+                        <span className="filter-label">{value.value}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <p style={{ fontSize: '13px', color: '#888', textAlign: 'center', padding: '20px 0' }}>
+              No filters available
+            </p>
+          )}
+          
+          <button className="reset-filters" onClick={resetFilters}>
+            Reset All Filters
           </button>
         </aside>
 
@@ -274,86 +436,62 @@ export default function Shop() {
           </div>
 
           {filteredProducts.length > 0 ? (
-            <div className="products-grid">
-              {filteredProducts.map(product => (
-                <div key={product.id} className="product-item">
-                  <div className="product-image-container">
-                    {product.image && (product.image.startsWith('http') || product.image.startsWith('/')) ? (
-                      <img src={product.image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      <div className="product-image">{product.image}</div>
-                    )}
-                    {/* Wishlist Button */}
-                    <button
-                      className={`wishlist-btn ${wishlistProducts.includes(product.id) ? 'active' : ''}`}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleAddToWishlist(product.id)
-                      }}
-                      title={wishlistProducts.includes(product.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
-                      style={{
-                        position: 'absolute',
-                        top: '10px',
-                        right: '10px',
-                        background: 'white',
-                        border: 'none',
-                        borderRadius: '50%',
-                        width: '36px',
-                        height: '36px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-                        fontSize: '18px',
-                        zIndex: 5
-                      }}
+            <>
+              <div className="products-grid">
+                {currentProducts.map(product => (
+                  <div 
+                    key={product.id} 
+                    className="product-item"
+                  >
+                    <div
+                      className="product-image-container"
+                      onClick={() => navigate(`/product/${product.id}`)}
+                      style={{ cursor: 'pointer' }}
                     >
-                      {wishlistProducts.includes(product.id) ? '❤️' : '🤍'}
-                    </button>
-                    <div className="product-overlay">
-                      <button
-                        className="view-details-btn"
-                        onClick={() => navigate(`/product/${product.id}`)}
-                      >
-                        View Details
-                      </button>
-                    </div>
-                  </div>
-<div className="product-details">
-                    <h3 className="product-name">{product.name}</h3>
-                    <div className="product-info-row">
-                      {/* Show all filter selections dynamically */}
-                      {product.filterSelections && Object.keys(product.filterSelections).length > 0 ? (
-                        Object.entries(product.filterSelections).map(([key, value], idx) => (
-                          <span key={idx} className="product-fragrance" style={{ textTransform: 'capitalize' }}>
-                            {value}
-                          </span>
-                        ))
+                      {product.image && (product.image.startsWith('http') || product.image.startsWith('/')) ? (
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
                       ) : (
-                        <>
-                          <span className="product-fragrance">{product.fragrance}</span>
-                          <span className="product-size">{product.size}</span>
-                        </>
+                        <div className="product-image">{product.image}</div>
                       )}
-                    </div>
-                    <p className="product-short-desc">{product.description}</p>
-                    <div className="product-footer">
-                      <span className="product-price">${product.price}</span>
                       <button
-                        className="add-to-cart-btn"
-                        onClick={() => {
-                          addToCart(product, 1)
-                          alert(`Added "${product.name}" to cart!`)
+                        type="button"
+                        className={`wishlist-btn ${wishlistProducts.includes(product.id) ? 'active' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleAddToWishlist(product.id)
                         }}
+                        aria-label={wishlistProducts.includes(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
                       >
-                        🛒 Add to Cart
+                        {wishlistProducts.includes(product.id) ? '❤' : '♡'}
                       </button>
                     </div>
+                    <div className="product-details">
+                      <h3 className="product-name">{product.name}</h3>
+                      <div className="product-footer">
+                        <span className="product-price">₹{product.price}</span>
+                        <button
+                          className="add-to-cart-btn"
+                          onClick={() => {
+                            addToCart(product, 1)
+                            setCartMessage(`Added "${product.name}" to cart!`)
+                            setTimeout(() => setCartMessage(''), 3000)
+                          }}
+                        >
+                          🛒 Add to Cart
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {renderPagination()}
+            </>
           ) : (
             <div className="no-products">
               <p>No products found. Try adjusting your filters.</p>
@@ -364,3 +502,5 @@ export default function Shop() {
     </div>
   )
 }
+
+

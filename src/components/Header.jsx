@@ -66,7 +66,7 @@ export default function Header() {
             </a>
           </li>
 
-          <li
+          {/* <li
             className="dropdown"
             onMouseEnter={() => setIsCategoryOpen(true)}
             onMouseLeave={() => setIsCategoryOpen(false)}
@@ -110,7 +110,7 @@ export default function Header() {
                 </li>
               </ul>
             )}
-          </li>
+          </li> */}
           <li>
             <a href="/shop" onClick={() => handleNavClick("/shop")}>
               SHOP ALL

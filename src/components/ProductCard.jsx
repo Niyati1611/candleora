@@ -11,9 +11,23 @@ export default function ProductCard({
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [isHovered, setIsHovered] = useState(false)
   
-  // Handle multiple images
-  const images = product.images && product.images.length > 0 
-    ? product.images 
+  // Parse images from backend - it might be a string or array
+  // Note: URLs are already converted to absolute by api.js
+  let imagesArray = [];
+  try {
+    if (product.images) {
+      if (typeof product.images === 'string') {
+        imagesArray = JSON.parse(product.images);
+      } else if (Array.isArray(product.images)) {
+        imagesArray = product.images;
+      }
+    }
+  } catch (e) {
+    imagesArray = [];
+  }
+  
+  const images = imagesArray && imagesArray.length > 0 
+    ? imagesArray
     : product.image_url 
       ? [product.image_url] 
       : ['🕯️']
@@ -83,11 +97,11 @@ export default function ProductCard({
         <div className="product-price-container">
           {hasDiscount ? (
             <>
-              <span className="original-price">${parseFloat(product.price).toFixed(2)}</span>
-              <span className="discount-price">${parseFloat(product.discount_price).toFixed(2)}</span>
+              <span className="original-price">₹{parseFloat(product.price).toFixed(2)}</span>
+              <span className="discount-price">₹{parseFloat(product.discount_price).toFixed(2)}</span>
             </>
           ) : (
-            <span className="product-price">${parseFloat(product.price).toFixed(2)}</span>
+            <span className="product-price">₹{parseFloat(product.price).toFixed(2)}</span>
           )}
         </div>
         

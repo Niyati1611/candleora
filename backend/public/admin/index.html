@@ -148,6 +148,7 @@ x<!DOCTYPE html>
       <div id="addProductForm" class="form-container hidden" style="margin-bottom: 20px;">
         <h3>Add New Product</h3>
         <form id="productForm">
+          <input type="hidden" id="editProductId" value="">
           <div class="form-group">
             <input type="text" id="productName" placeholder="Product Name" required>
           </div>
@@ -254,8 +255,13 @@ x<!DOCTYPE html>
     <h3>Banner Images</h3>
     <form id="bannerForm" onsubmit="uploadBanner(event)">
       <div class="form-group">
+        <label>Banner Image</label>
         <input type="file" id="bannerFile" accept="image/*" required />
         <div id="bannerFileName" style="margin-top:8px; color:#555; font-size:0.95rem;"></div>
+      </div>
+      <div class="form-group">
+        <label>Banner Text (Optional)</label>
+        <input type="text" id="bannerText" placeholder="Enter text to display on banner" />
       </div>
       <button type="submit" class="btn">Upload Image</button>
     </form>
@@ -266,7 +272,7 @@ x<!DOCTYPE html>
         <thead>
           <tr>
             <th>Image Preview</th>
-            <th>File Name</th>
+            <th>Text</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -276,7 +282,7 @@ x<!DOCTYPE html>
       </table>
     </div>
   </div>
-</div> 
+</div>
 
 <!-- Add this CSS for animations and styles (or include in your main CSS) -->
 <style>
@@ -840,7 +846,10 @@ async function loadFiltersForProductForm() {
         loadUsers();
       }
       if (section === 'contacts') loadContacts();
-      if (section === 'filters') loadFilters();
+      if (section === 'settings') {
+        loadSettings();
+        loadFilters();
+      }
     });
   });
 
@@ -864,9 +873,9 @@ async function loadFiltersForProductForm() {
     container.innerHTML = bannerImages.map((img, idx) => `
       <tr data-id="${img.id}">
         <td style="width:140px;"><img src="${img.image_url}" alt="banner" style="height:60px; object-fit:cover; border-radius:6px;" /></td>
-        <td style="vertical-align:middle;">${img.image_url.split('/').pop()}</td>
+        <td style="vertical-align:middle;">${escapeHtml(img.text || '')}</td>
         <td style="vertical-align:middle;">
-         
+          <button class="btn-sm edit" onclick="editBannerText(${img.id}, '${escapeHtml(img.text || '')}')">Edit Text</button>
           <button class="btn-sm delete" style="background:#e74c3c;" onclick="deleteBanner(${img.id})">Delete</button>
         </td>
       </tr>
@@ -895,9 +904,11 @@ async function loadFiltersForProductForm() {
   async function uploadBanner(e) {
     e.preventDefault();
     const fileInput = document.getElementById('bannerFile');
+    const textInput = document.getElementById('bannerText');
     if (fileInput.files.length === 0) return;
     const form = new FormData();
     form.append('image', fileInput.files[0]);
+    form.append('text', textInput.value || '');
     try {
       const res = await fetch(`${API_BASE}/banner`, {
         method: 'POST',
@@ -906,6 +917,7 @@ async function loadFiltersForProductForm() {
       });
       if (res.ok) {
         fileInput.value = '';
+        textInput.value = '';
         document.getElementById('bannerFileName').textContent = '';
         loadBanner();
         alert('Banner uploaded');
@@ -915,6 +927,30 @@ async function loadFiltersForProductForm() {
       }
     } catch (err) {
       alert('Upload error: ' + err.message);
+    }
+  }
+
+  async function editBannerText(id, currentText) {
+    const newText = prompt('Enter banner text:', currentText);
+    if (newText === null) return;
+    try {
+      const res = await fetch(`${API_BASE}/banner/${id}/text`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ text: newText })
+      });
+      if (res.ok) {
+        loadBanner();
+        alert('Banner text updated');
+      } else {
+        const err = await res.json();
+        alert('Update failed: ' + (err.error || res.statusText));
+      }
+    } catch (err) {
+      alert('Error updating banner text: ' + err.message);
     }
   }
 
@@ -1061,6 +1097,70 @@ async function loadFiltersForProductForm() {
     } catch (error) {
       alert('Error deleting product: ' + error.message);
     }
+  }
+
+  // Edit product - fetch product data and show in form
+  async function editProduct(id) {
+    try {
+      const res = await fetch(`${API_BASE}/products/${id}`);
+      if (!res.ok) throw new Error('Failed to fetch product');
+      const product = await res.json();
+      
+      // Show the form
+      document.getElementById('addProductForm').classList.remove('hidden');
+      document.getElementById('productFormTitle').textContent = 'Edit Product';
+      document.getElementById('productFormBtn').textContent = 'Update Product';
+      document.getElementById('cancelEditBtn').style.display = 'block';
+      document.getElementById('editProductId').value = product.id;
+      
+      // Fill form with product data
+      document.getElementById('productName').value = product.name || '';
+      document.getElementById('productDescription').value = product.description || '';
+      document.getElementById('productPrice').value = product.price || '';
+      document.getElementById('productCategory').value = product.category || '';
+      document.getElementById('productImage').value = product.image_url || '';
+      document.getElementById('productStock').value = product.stock || '';
+      
+      // New arrival settings
+      const isNewArrival = product.is_new_arrival == 1 || product.is_new_arrival === true;
+      document.getElementById('productNewArrival').checked = isNewArrival;
+      
+      // Show existing image if available
+      if (product.image_url) {
+        document.getElementById('previewImg').src = product.image_url;
+        document.getElementById('imagePreview').style.display = 'block';
+      }
+      
+      // Load filters for the form
+      await loadFiltersForProductForm();
+      
+      // Set filter selections if product has any
+      if (product.filter_selections) {
+        setTimeout(() => {
+          const selections = product.filter_selections;
+          for (const [key, value] of Object.entries(selections)) {
+            const radio = document.querySelector(`input[name="filter_${key}"][value="${value}"]`);
+            if (radio) radio.checked = true;
+          }
+        }, 500);
+      }
+      
+      // Scroll to form
+      document.getElementById('addProductForm').scrollIntoView({ behavior: 'smooth' });
+    } catch (error) {
+      alert('Error loading product: ' + error.message);
+    }
+  }
+
+  // Cancel edit mode
+  function cancelEdit() {
+    document.getElementById('productForm').reset();
+    document.getElementById('productFormTitle').textContent = 'Add New Product';
+    document.getElementById('productFormBtn').textContent = 'Save Product';
+    document.getElementById('cancelEditBtn').style.display = 'none';
+    document.getElementById('editProductId').value = '';
+    document.getElementById('imagePreview').style.display = 'none';
+    document.getElementById('previewImg').src = '';
   }
 
   // Add product - handles file upload

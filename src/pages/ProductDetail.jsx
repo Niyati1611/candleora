@@ -21,8 +21,8 @@ export default function ProductDetail() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const productRes = await fetch(`http://localhost:5000/api/products/${id}`)
-        const productData = await productRes.json()
+        // Use api.js which handles image URL conversion
+        const productData = await api.getProductById(id)
         
         const filtersRes = await fetch(`http://localhost:5000/api/filters`)
         const filtersData = await filtersRes.json()
@@ -43,8 +43,8 @@ export default function ProductDetail() {
         }
         setFilters(filtersData.filters || [])
 
-        const allProductsRes = await fetch(`http://localhost:5000/api/products`)
-        const allProductsData = await allProductsRes.json()
+        // Use api.js which handles image URL conversion
+        const allProductsData = await api.getProducts()
         setRelatedProducts(allProductsData || [])
       } catch (error) {
         console.error('Error fetching product:', error)
@@ -164,7 +164,7 @@ export default function ProductDetail() {
         <div className="product-detail-info">
           <h1 className="detail-title">{product.name}</h1>
 
-          <div className="detail-price">${product.price}</div>
+          <div className="detail-price">₹{product.price}</div>
 
           <p className="detail-description">{product.description}</p>
 
@@ -218,31 +218,39 @@ export default function ProductDetail() {
 
           {/* Additional Info */}
           <div className="detail-additional">
-            <div className="info-box">
-              <span className="info-label">Weight:</span>
-              <span className="info-value">{product.weight}</span>
-            </div>
-            <div className="info-box">
-              <span className="info-label">Burning Time:</span>
-              <span className="info-value">{product.burningTime}</span>
-            </div>
+            {product.weight && (
+              <div className="info-box">
+                <span className="info-label">Weight:</span>
+                <span className="info-value">{product.weight}</span>
+              </div>
+            )}
+            {product.burningTime && (
+              <div className="info-box">
+                <span className="info-label">Burning Time:</span>
+                <span className="info-value">{product.burningTime}</span>
+              </div>
+            )}
           </div>
 
           {/* Ingredients */}
-          <div className="detail-section">
-            <h3>Ingredients</h3>
-            <p>{product.ingredients}</p>
-          </div>
+          {product.ingredients && (
+            <div className="detail-section">
+              <h3>Ingredients</h3>
+              <p>{product.ingredients}</p>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Dimensions Section */}
-      <div className="product-detail-full">
-        <div className="dimensions-section">
-          <h2>Dimensions</h2>
-          <p>{product.dimensions}</p>
+      {product.dimensions && (
+        <div className="product-detail-full">
+          <div className="dimensions-section">
+            <h2>Dimensions</h2>
+            <p>{product.dimensions}</p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Related Products */}
       <div className="related-products">
@@ -259,7 +267,7 @@ export default function ProductDetail() {
               >
                 <div className="related-image">🕯️</div>
                 <h4>{relatedProduct.name}</h4>
-                <p>${relatedProduct.price}</p>
+                <p>₹{relatedProduct.price}</p>
               </div>
             ))}
         </div>

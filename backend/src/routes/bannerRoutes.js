@@ -35,6 +35,7 @@ router.get('/', bannerController.listBanner);
 
 // admin-only routes
 router.post('/', authenticateToken, upload.single('image'), bannerController.uploadImage);
+router.put('/:id/text', authenticateToken, bannerController.updateBannerText);
 router.delete('/:id', authenticateToken, bannerController.deleteImage);
 router.put('/reorder', authenticateToken, bannerController.reorderImages);
 

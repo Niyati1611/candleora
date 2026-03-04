@@ -83,6 +83,7 @@ export default function NewArrivals() {
   }
 
   const handleAddToCart = (product) => {
+    // Image URL is already converted to absolute by api.js
     addToCart({
       id: product.id,
       name: product.name,

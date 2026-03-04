@@ -16,7 +16,7 @@ export default function ProductGrid() {
         const formattedProducts = data.map(p => ({
           id: p.id,
           title: p.name,
-          price: `$${parseFloat(p.price).toFixed(2)}`,
+          price: `₹${parseFloat(p.price).toFixed(2)}`,
           image: '🕯️'
         }))
         setProducts(formattedProducts)

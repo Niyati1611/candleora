@@ -1,33 +1,83 @@
 // src/services/api.js
 const API_BASE = 'http://localhost:5000/api';
+const BACKEND_ORIGIN = 'http://localhost:5000';
+
+// Helper function to convert relative image URLs to absolute URLs
+const convertProductImages = (product) => {
+  if (!product) return product;
+  
+  // Clone the product to avoid mutating the original
+  const converted = { ...product };
+  
+  // Convert image_url if it exists and is a relative path
+  if (converted.image_url && typeof converted.image_url === 'string' && converted.image_url.startsWith('/')) {
+    converted.image_url = BACKEND_ORIGIN + converted.image_url;
+  }
+  
+  // Convert images array if it exists
+  if (converted.images) {
+    try {
+      let imagesArray;
+      if (typeof converted.images === 'string') {
+        imagesArray = JSON.parse(converted.images);
+      } else if (Array.isArray(converted.images)) {
+        imagesArray = converted.images;
+      }
+      
+      if (Array.isArray(imagesArray)) {
+        converted.images = imagesArray.map(img => {
+          if (img && typeof img === 'string' && img.startsWith('/')) {
+            return BACKEND_ORIGIN + img;
+          }
+          return img;
+        });
+      }
+    } catch (e) {
+      // Keep original if parsing fails
+    }
+  }
+  
+  return converted;
+};
+
+// Helper function to convert array of products
+const convertProductsArray = (products) => {
+  if (!Array.isArray(products)) return products;
+  return products.map(convertProductImages);
+};
 
 export const api = {
   // Products
   getProducts: async () => {
     const res = await fetch(`${API_BASE}/products`);
-    return res.json();
+    const products = await res.json();
+    return convertProductsArray(products);
   },
 
   getProductById: async (id) => {
     const res = await fetch(`${API_BASE}/products/${id}`);
     if (!res.ok) throw new Error('Product not found');
-    return res.json();
+    const product = await res.json();
+    return convertProductImages(product);
   },
 
   getProductsByCategory: async (category) => {
     const res = await fetch(`${API_BASE}/products/category/${category}`);
-    return res.json();
+    const products = await res.json();
+    return convertProductsArray(products);
   },
 
   // New Arrivals
   getNewArrivals: async () => {
     const res = await fetch(`${API_BASE}/products/new-arrivals`);
-    return res.json();
+    const products = await res.json();
+    return convertProductsArray(products);
   },
 
   getRecentlyAdded: async (days = 30) => {
     const res = await fetch(`${API_BASE}/products/recent?days=${days}`);
-    return res.json();
+    const products = await res.json();
+    return convertProductsArray(products);
   },
 
   // Orders
@@ -304,7 +354,17 @@ export const api = {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error || 'Failed to fetch wishlist');
     }
-    return res.json();
+    const wishlist = await res.json();
+    // Convert wishlist item image URLs to absolute
+    if (Array.isArray(wishlist)) {
+      return wishlist.map(item => {
+        if (item.image_url && typeof item.image_url === 'string' && item.image_url.startsWith('/')) {
+          return { ...item, image_url: BACKEND_ORIGIN + item.image_url };
+        }
+        return item;
+      });
+    }
+    return wishlist;
   },
 
   addToWishlist: async (productId) => {

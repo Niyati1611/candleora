@@ -34,7 +34,7 @@ export default function CategoriesSection() {
 	return (
 		<section className="categories-section">
 			<div className="categories-header">
-				<h2>Shop by Category</h2>
+				<h2>Shop by Collection</h2>
 				<p>Find the perfect candle for any occasion or mood.</p>
 			</div>
 			<div className="categories-grid">

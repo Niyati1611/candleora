@@ -27,13 +27,31 @@ export const uploadImage = async (req, res) => {
     }
     // store url relative to public folder
     const url = `/uploads/banners/${req.file.filename}`;
-    const id = await Banner.add(url);
-    res.status(201).json({ id, url });
+    // Get text from request body (optional)
+    const text = req.body.text || '';
+    const id = await Banner.add(url, text);
+    res.status(201).json({ id, url, text });
   } catch (err) {
     // More specific error message for database issues
     if (err.message.includes('Unknown column')) {
       return res.status(500).json({ error: 'Database schema error: Please ensure the banner_images table has a position column.' });
     }
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const updateBannerText = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { text } = req.body;
+    
+    if (text === undefined) {
+      return res.status(400).json({ error: 'Text is required' });
+    }
+    
+    await Banner.updateText(id, text);
+    res.json({ message: 'Banner text updated', id, text });
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };

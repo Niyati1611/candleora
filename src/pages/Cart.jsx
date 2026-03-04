@@ -30,7 +30,7 @@ export default function Cart() {
                       <p className="item-meta">
                         <span>{item.fragrance}</span> • <span>{item.size}</span>
                       </p>
-                      <p className="item-price">${item.price}</p>
+                      <p className="item-price">₹{item.price}</p>
                     </div>
                     <div className="item-quantity">
                       <label htmlFor={`qty-${item.id}`}>Qty:</label>
@@ -57,7 +57,7 @@ export default function Cart() {
                       </div>
                     </div>
                     <div className="item-subtotal">
-                      ${(item.price * item.quantity).toFixed(2)}
+                      ₹{(item.price * item.quantity).toFixed(2)}
                     </div>
                     <button
                       className="remove-btn"
@@ -76,7 +76,7 @@ export default function Cart() {
               <div className="summary-content">
                 <div className="summary-row">
                   <span>Subtotal:</span>
-                  <span>${getTotalPrice().toFixed(2)}</span>
+                  <span>₹{getTotalPrice().toFixed(2)}</span>
                 </div>
                 <div className="summary-row">
                   <span>Shipping:</span>
@@ -84,12 +84,12 @@ export default function Cart() {
                 </div>
                 <div className="summary-row">
                   <span>Tax:</span>
-                  <span>${(getTotalPrice() * 0.1).toFixed(2)}</span>
+                  <span>₹{(getTotalPrice() * 0.1).toFixed(2)}</span>
                 </div>
                 <div className="summary-divider"></div>
                 <div className="summary-row total">
                   <span>Total:</span>
-                  <span>${(getTotalPrice() * 1.1).toFixed(2)}</span>
+                  <span>₹{(getTotalPrice() * 1.1).toFixed(2)}</span>
                 </div>
 
                 {/* 👇 Login check added here */}

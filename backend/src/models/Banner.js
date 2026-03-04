@@ -6,7 +6,7 @@ class Banner {
     try {
       const connection = await pool.getConnection();
       const [rows] = await connection.query(
-        'SELECT id, image_url, position FROM banner_images ORDER BY position ASC'
+        'SELECT id, image_url, text, position FROM banner_images ORDER BY position ASC'
       );
       connection.release();
       return rows;
@@ -16,18 +16,32 @@ class Banner {
   }
 
   // add a new banner image record; position will be set to max+1
-  static async add(imageUrl) {
+  static async add(imageUrl, text = '') {
     try {
       const connection = await pool.getConnection();
       // compute next position
       const [maxRows] = await connection.query('SELECT MAX(position) AS maxPos FROM banner_images');
       const nextPos = (maxRows[0].maxPos !== null) ? maxRows[0].maxPos + 1 : 0;
       const [result] = await connection.query(
-        'INSERT INTO banner_images (image_url, position) VALUES (?, ?)',
-        [imageUrl, nextPos]
+        'INSERT INTO banner_images (image_url, text, position) VALUES (?, ?, ?)',
+        [imageUrl, text, nextPos]
       );
       connection.release();
       return result.insertId;
+    } catch (err) {
+      throw new Error(`Database error: ${err.message}`);
+    }
+  }
+
+  // update banner text
+  static async updateText(id, text) {
+    try {
+      const connection = await pool.getConnection();
+      await connection.query(
+        'UPDATE banner_images SET text = ? WHERE id = ?',
+        [text, id]
+      );
+      connection.release();
     } catch (err) {
       throw new Error(`Database error: ${err.message}`);
     }

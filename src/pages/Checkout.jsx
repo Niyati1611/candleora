@@ -158,12 +158,12 @@ export default function Checkout() {
             <ul className="order-items-list">
               {placedOrderItems.map(item => (
                 <li key={item.id}>
-                  {item.quantity}x {item.name} - ${(item.price * item.quantity).toFixed(2)}
+                  {item.quantity}x {item.name} - ₹{(item.price * item.quantity).toFixed(2)}
                 </li>
               ))}
             </ul>
             <div className="order-total">
-              <strong>Total Amount: ${total.toFixed(2)}</strong>
+              <strong>Total Amount: ₹{total.toFixed(2)}</strong>
             </div>
             <p className="delivery-info">
               Your order will be delivered within 3-5 business days to your provided address.
@@ -376,7 +376,7 @@ export default function Checkout() {
                   <span>{item.name}</span>
                   <span className="summary-item-qty">x{item.quantity}</span>
                 </div>
-                <span className="summary-item-price">${(item.price * item.quantity).toFixed(2)}</span>
+                <span className="summary-item-price">₹{(item.price * item.quantity).toFixed(2)}</span>
               </div>
             ))}
           </div>
@@ -384,7 +384,7 @@ export default function Checkout() {
           <div className="summary-totals">
             <div className="summary-row">
               <span>Subtotal:</span>
-              <span>${getTotalPrice().toFixed(2)}</span>
+              <span>₹{getTotalPrice().toFixed(2)}</span>
             </div>
             <div className="summary-row">
               <span>Shipping:</span>
@@ -392,11 +392,11 @@ export default function Checkout() {
             </div>
             <div className="summary-row">
               <span>Tax (10%):</span>
-              <span>${(getTotalPrice() * 0.1).toFixed(2)}</span>
+              <span>₹{(getTotalPrice() * 0.1).toFixed(2)}</span>
             </div>
             <div className="summary-row total">
               <span>Total:</span>
-              <span>${(getTotalPrice() * 1.1).toFixed(2)}</span>
+              <span>₹{(getTotalPrice() * 1.1).toFixed(2)}</span>
             </div>
           </div>
         </aside>

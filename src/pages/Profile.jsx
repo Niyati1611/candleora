@@ -174,7 +174,7 @@ export default function Profile() {
         <div className="profile-header">
           <h1 className="profile-title">My Profile</h1>
           <button className="logout-btn" onClick={handleLogout}>
-            🚪 Logout
+             Logout
           </button>
         </div>
         
@@ -291,7 +291,7 @@ export default function Profile() {
                     </div>
                     <div className="order-details">
                       <p><strong>Date:</strong> {formatDate(order.created_at)}</p>
-                      <p><strong>Total:</strong> ${parseFloat(order.total_amount).toFixed(2)}</p>
+                      <p><strong>Total:</strong> ₹{parseFloat(order.total_amount).toFixed(2)}</p>
                       <p><strong>Items:</strong> {order.items?.length || 0}</p>
                     </div>
                     <div className="order-items">
@@ -343,11 +343,11 @@ export default function Profile() {
                       <p className="wishlist-price">
                         {item.discount_price ? (
                           <>
-                            <span className="original-price">${parseFloat(item.price).toFixed(2)}</span>
-                            <span className="sale-price">${parseFloat(item.discount_price).toFixed(2)}</span>
+                            <span className="original-price">₹{parseFloat(item.price).toFixed(2)}</span>
+                            <span className="sale-price">₹{parseFloat(item.discount_price).toFixed(2)}</span>
                           </>
                         ) : (
-                          <span>${parseFloat(item.price).toFixed(2)}</span>
+                          <span>₹{parseFloat(item.price).toFixed(2)}</span>
                         )}
                       </p>
                     </div>

@@ -49,7 +49,7 @@ export default function Slideshow() {
         if (data.images && data.images.length) {
           const bannerSlides = data.images.map(img => ({
             id: img.id,
-            title: '',
+            title: img.text || '',
             subtitle: '',
             description: '',
             image: img.image_url
